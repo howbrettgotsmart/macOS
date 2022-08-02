@@ -6,7 +6,7 @@
 ##############################################################################################################################
 
 ## Set the Variables
-logpath="/var/log/GSAlogs/"
+logpath="/var/log/LOGFolder/"
 chromePath="/Applications/Google Chrome"
 bddy="/usr/libexec/PlistBuddy"
 tgt="/Applications/Google Chrome.app/Contents/Info.plist"
