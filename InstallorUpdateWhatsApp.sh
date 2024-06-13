@@ -6,7 +6,7 @@
 #   \/_/  \/_/   \/_/\/_/   \/____/   \/_____/      \/_____/   \/_____/      \/_____/   \/_/ /_/   \/_____/     \/_/     \/_/ 
 #                                                                                                                            
 
-# Created by Brett Thomason - Kills FontAgent and updates to latest version.  
+# Created by Brett Thomason - Kills WhatsApp and updates to latest version.  
 
 
 # Function to check if WhatsApp is installed
