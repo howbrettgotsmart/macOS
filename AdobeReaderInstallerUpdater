@@ -1,0 +1,85 @@
+#!/bin/zsh
+
+###############################################################################
+# Adobe Reader Installer/Updater Script
+# Created by Brett Thomason - macOS Mastermind in Sarasota 😎
+# Date: April 5, 2025
+#
+# This script checks for Adobe Reader DC, compares the version with the latest
+# release, and installs/updates accordingly.
+###############################################################################
+
+# Path to Adobe Reader
+adobe_reader_app_path="/Applications/Adobe Acrobat Reader DC.app"
+
+# Check if Adobe Reader is installed
+is_adobe_reader_installed() {
+    [[ -d "$adobe_reader_app_path" ]] && echo "true" || echo "false"
+}
+
+# Get installed version
+get_installed_version() {
+    defaults read "$adobe_reader_app_path/Contents/Info" CFBundleShortVersionString 2>/dev/null
+}
+
+# Get the latest version from Adobe
+get_latest_version() {
+    curl -s "https://armmf.adobe.com/arm-manifests/mac/AcrobatDC/reader/current_version.txt"
+}
+
+# Version comparison
+version_gt() {
+    [ "$(printf "%s\n" "$1" "$2" | sort -V | tail -n 1)" != "$2" ]
+}
+
+# Download and install Adobe Reader
+download_and_install_adobe_reader() {
+    latest_version=$(get_latest_version)
+    dmg_path="/tmp/AdobeReaderInstaller.dmg"
+    url_version="${latest_version//./}"
+    download_url="https://ardownload2.adobe.com/pub/adobe/reader/mac/AcrobatDC/${url_version}/AcroRdrDC_${url_version}_MUI.dmg"
+
+    echo "=> Downloading Adobe Reader $latest_version..."
+    curl -L -o "$dmg_path" "$download_url"
+
+    if [[ -f "$dmg_path" ]]; then
+        echo "=> Mounting installer disk image..."
+        volume=$(hdiutil attach "$dmg_path" -nobrowse | grep Volumes | awk '{print $3}')
+        sleep 2
+
+        pkg_path=$(find "$volume" -name "*.pkg" -maxdepth 1)
+
+        if [[ -n "$pkg_path" ]]; then
+            echo "=> Installing Adobe Reader..."
+            installer -pkg "$pkg_path" -target / >/dev/null
+            echo "✅ Adobe Reader $latest_version installed successfully."
+        else
+            echo "❌ Installer package not found in mounted volume."
+        fi
+
+        echo "=> Cleaning up..."
+        hdiutil detach "$volume" -quiet
+        rm -f "$dmg_path"
+    else
+        echo "❌ Failed to download Adobe Reader."
+    fi
+}
+
+# Main logic
+update_or_install_adobe_reader() {
+    installed_version=$(get_installed_version)
+    latest_version=$(get_latest_version)
+
+    if [[ "$(is_adobe_reader_installed)" == "false" ]]; then
+        echo "🔍 Adobe Reader is not installed. Installing now..."
+        download_and_install_adobe_reader
+    elif version_gt "$latest_version" "$installed_version"; then
+        echo "⬆️  Update available: $installed_version → $latest_version"
+        download_and_install_adobe_reader
+    else
+        echo "✅ Adobe Reader is up-to-date (version: $installed_version)"
+    fi
+}
+
+# Run it
+update_or_install_adobe_reader
